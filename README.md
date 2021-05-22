@@ -1,5 +1,5 @@
 # SpinLoad
-##NOTE: Under Active Development
+## NOTE: Under Active Development
 SpinLoad is a simple web server for generating desired load types on demand. Can be used for testing infrastructure, monitoring applications and 
 alerts, and autoscaling configurations. You can send a `POST` to spinload and request 50% CPU usage for a period of
 time by using query parameters. 
