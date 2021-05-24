@@ -62,7 +62,7 @@ func parseFloat (s string, bitSize int) (float64) {
 //func (l *load) loadGen(w http.ResponseWriter, r *http.Request) {
 func loadGen(w http.ResponseWriter, r *http.Request) {
 
-	//query := r.URL.Query()
+	query := r.URL.Query()
 
 	cpuLimiter := &cpulimit.Limiter{
 		//MaxCPUUsage: float64(10),
@@ -74,13 +74,13 @@ func loadGen(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	//cpuPercent := query.Get("cpu")
-	//if cpuPercent != "" {
-	//	cpuLimiter.MaxCPUUsage = parseFloat(cpuPercent, 64)
-	//
-	//	// start up cpu load
-	//	//loadCpu(parseFloat(cpuPercent, 64))
-	//}
+	cpuPercent := query.Get("cpu")
+	if cpuPercent != "" {
+		cpuLimiter.MaxCPUUsage = parseFloat(cpuPercent, 64)
+
+		// start up cpu load
+		//loadCpu(parseFloat(cpuPercent, 64))
+	}
 
 	//fmt.Printf("Limiter = %f", cpuLimiter.MaxCPUUsage)
 
@@ -98,7 +98,7 @@ func loadGen(w http.ResponseWriter, r *http.Request) {
 					return
 				case <-cpuLimiter.H:
 					// over desired cpu usg, pause for a bit to cool down
-					time.Sleep(time.Millisecond * 1000)
+					time.Sleep(time.Millisecond * 550)
 				default:
 					// infinite loop
 				}
