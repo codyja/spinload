@@ -23,51 +23,11 @@ func parseFloat (s string, bitSize int) (float64) {
 	return f
 }
 
-//func loadCpu(c float64) {
-//	cpuLimiter := &cpulimit.Limiter{
-//		//MaxCPUUsage: float64(l.CpuPercent),
-//		MaxCPUUsage: c,
-//		SwitchPeriod: 100 * time.Millisecond,
-//		MeasurePeriod: 25 * time.Millisecond,
-//		MeasureDuration: 200 * time.Millisecond,
-//
-//	}
-//
-//	cpuLimiter.Start()
-//	defer cpuLimiter.Stop()
-//
-//	done := make(chan int)
-//
-//	for i := 0; i < runtime.NumCPU(); i++ {
-//		go func() {
-//			for {
-//				select {
-//				case <-done:
-//					return
-//				case <-cpuLimiter.H:
-//					// over desired cpu usg, pause for a bit to cool down
-//					time.Sleep(time.Millisecond * 50)
-//				default:
-//					// infinite loop
-//				}
-//			}
-//		}()
-//	}
-//
-//	// keep socket open for 2000ms to simulate a busy web server, then close channel
-//	time.Sleep(time.Second * 3)
-//	close(done)
-//}
-
-//func (l *load) loadGen(w http.ResponseWriter, r *http.Request) {
 func loadGen(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
 
 	cpuLimiter := &cpulimit.Limiter{
-		//MaxCPUUsage: float64(10),
-		//MaxCPUUsage: float64(l.CpuPercent),
-		//MaxCPUUsage: float64(50),
 		SwitchPeriod: 100 * time.Millisecond,
 		MeasurePeriod: 25 * time.Millisecond,
 		MeasureDuration: 200 * time.Millisecond,
@@ -75,15 +35,27 @@ func loadGen(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cpuPercent := query.Get("cpu")
+
+	var brakeTime time.Duration
+
 	if cpuPercent != "" {
-		cpuLimiter.MaxCPUUsage = parseFloat(cpuPercent, 64)
+		percent := parseFloat(cpuPercent, 64)
+		cpuLimiter.MaxCPUUsage = percent
 
-		// start up cpu load
-		//loadCpu(parseFloat(cpuPercent, 64))
+		switch {
+		case percent <= 20:
+			brakeTime = 550 * time.Millisecond
+		case percent <= 40:
+			brakeTime = 250 * time.Millisecond
+		case percent <= 60:
+			brakeTime = 200 * time.Millisecond
+		case percent <= 80:
+			brakeTime = 5 * time.Millisecond
+		case percent <= 100:
+			brakeTime = 10 * time.Millisecond
+		}
+
 	}
-
-	//fmt.Printf("Limiter = %f", cpuLimiter.MaxCPUUsage)
-
 
 	cpuLimiter.Start()
 	defer cpuLimiter.Stop()
@@ -98,9 +70,9 @@ func loadGen(w http.ResponseWriter, r *http.Request) {
 					return
 				case <-cpuLimiter.H:
 					// over desired cpu usg, pause for a bit to cool down
-					time.Sleep(time.Millisecond * 550)
+					//time.Sleep(time.Millisecond * 550)
+					time.Sleep(brakeTime)
 				default:
-					// infinite loop
 				}
 			}
 		}()
